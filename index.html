@@ -4046,7 +4046,6 @@
         <div class="glass-panel p-1.5 rounded-2xl flex items-center justify-between shadow-[0_20px_60px_rgba(0,0,0,0.4)] border border-white/40 backdrop-blur-3xl bg-white/10">
             ${tabs.map(tab => {
                     const isActive = t === tab.id;
-                    
                     return `
                 <button data-act="tab" data-val="${tab.id}" class="relative flex flex-col items-center justify-center flex-1 py-2 px-1 transition-all duration-300 ${isActive ? 'scale-110 -translate-y-1' : 'opacity-70 hover:opacity-100'}">
                     <div class="w-10 h-10 rounded-xl bg-gradient-to-br ${isActive ? tab.color : 'from-white/10 to-white/5'} flex items-center justify-center mb-1 shadow-lg transition-all duration-300 border ${isActive ? 'border-white/30' : 'border-white/10'}">
@@ -4062,7 +4061,6 @@
     `;
             }
 
-
             function renderFilters() {
                 return `
       <div class="flex flex-col sm:flex-row gap-2 mb-3">
@@ -4076,7 +4074,8 @@
             <div class="flex items-center gap-1.5 bg-slate-800 border border-slate-700 rounded-lg px-3 h-[38px]">
                <svg class="w-3.5 h-3.5 text-slate-500 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4h13M3 8h9m-9 4h6m4 0l4-4m0 0l4 4m-4-4v12"/></svg>
                <select data-act="flt-sort" class="bg-transparent text-sm text-slate-300 outline-none cursor-pointer appearance-none pr-1">
-                  <option value="date-desc" ${(state.sortOrder||'date-desc') === 'date-desc' ? 'selected' : ''}>Tarih (Yeni→Eski)</option>
+                  <option value="city" ${(!state.sortOrder || state.sortOrder === 'city') ? 'selected' : ''}>Şehre Göre</option>
+                  <option value="date-desc" ${(state.sortOrder||'') === 'date-desc' ? 'selected' : ''}>Tarih (Yeni→Eski)</option>
                   <option value="date-asc" ${(state.sortOrder||'') === 'date-asc' ? 'selected' : ''}>Tarih (Eski→Yeni)</option>
                   <option value="name-asc" ${(state.sortOrder||'') === 'name-asc' ? 'selected' : ''}>İsim (A→Z)</option>
                   <option value="name-desc" ${(state.sortOrder||'') === 'name-desc' ? 'selected' : ''}>İsim (Z→A)</option>
@@ -4122,12 +4121,12 @@
                 if (!exp.length) return `<div class="text-center py-8 text-slate-500 text-sm border border-dashed border-slate-800 rounded-xl">Kayıt bulunamadı.</div>`;
 
                 // Sıralama uygula
-                const sortOrder = state.sortOrder || 'date-desc';
+                const sortOrder = state.sortOrder || 'city';
                 const sortedExp = [...exp].sort((a, b) => {
                     if (sortOrder === 'date-desc') {
                         return new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime() || (b.id||'').localeCompare(a.id||'');
                     } else if (sortOrder === 'date-asc') {
-                        return new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime() || (a.id||'').localeCompare(b.id||'');
+                        return new Date(a.date || 0).getTime() - new Date(b.date || 0).getTime() || (a.id||'').localeCompare(a.id||'');
                     } else if (sortOrder === 'name-asc') {
                         return (a.place||'').localeCompare(b.place||'', 'tr', {sensitivity:'base'});
                     } else if (sortOrder === 'name-desc') {
@@ -4137,14 +4136,21 @@
                     } else if (sortOrder === 'amt-asc') {
                         return convertToBase(Number(a.amt)||0, a.cur, state.baseCurrency, a.trip) - convertToBase(Number(b.amt)||0, b.cur, state.baseCurrency, b.trip);
                     }
-                    return 0;
+                    return (a.city || 'Genel').localeCompare(b.city || 'Genel') || (new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime());
                 });
 
-                const grp = {}; sortedExp.forEach(x => { const c = x.city || 'Genel'; if (!grp[c]) grp[c] = []; grp[c].push(x) });
+                const grp = {}; 
+                if (sortOrder === 'city') {
+                    sortedExp.forEach(x => { const c = x.city || 'Genel'; if (!grp[c]) grp[c] = []; grp[c].push(x) });
+                } else {
+                    grp['Sıralanmış Harcamalar'] = sortedExp;
+                }
 
-                return `<div class="space-y-3 pb-24">${Object.keys(grp).sort().map(city => {
+                const cityNames = sortOrder === 'city' ? Object.keys(grp).sort() : ['Sıralanmış Harcamalar'];
+
+                return `<div class="space-y-3 pb-24">${cityNames.map(city => {
                     const lst = grp[city];
-                    const expd = state.expandedCities[city];
+                    const expd = sortOrder !== 'city' ? true : state.expandedCities[city];
 
                     let sumInBase = 0;
                     lst.forEach(x => {
@@ -4167,10 +4173,12 @@
                 </div>
               </button>
               
-              <!-- Silme butonu artık wrapper içinde ve toggle butonundan bağımsız -->
+              <!-- Silme butonu sadece Şehre Göre gruplamada gösterilsin -->
+              ${sortOrder === 'city' ? `
               <button data-act="del-city" type="button" data-val="${esc(city)}" class="absolute right-4 top-1/2 -translate-y-1/2 p-2 text-slate-600 hover:text-red-400 hover:bg-slate-700 rounded-full transition z-20">
                   ${ICONS.trash.replace('w-4 h-4', 'w-3.5 h-3.5')}
               </button>
+              ` : ''}
           </div>
           
           <div class="bg-slate-100 border-t border-slate-300 ${expd ? 'rounded-b-2xl' : ''}">
