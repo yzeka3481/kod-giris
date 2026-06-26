@@ -1328,7 +1328,7 @@
             // --- HARCAMA GRAFİĞİ VE RAPOR VERİ HAZIRLAMA ---
             function getChartDataset(expenses = state.exp) {
                 // Önce grafik için temel veri setini belirle
-                const base = (state._visibleExp && state._visibleExp.length && expenses === state.exp)
+                                const base = (state._visibleExp && expenses === state.exp)
                     ? state._visibleExp
                     : expenses;
 
@@ -5694,9 +5694,9 @@ function renderApp() {
                     const exp = combined.filter(x => {
                         if (state.tab === 'exp') {
                             // Sadece aktif seyahatleri göster (eğer özel bir filtre seçilmemişse)
-                            if (state.tripFilter) {
+                                                        if (state.tripFilter) {
                                 if (x.trip !== state.tripFilter) return false;
-                            } else if (activeTripNames.length > 0) {
+                            } else {
                                 if (!activeTripNames.includes(x.trip)) return false;
                             }
 
