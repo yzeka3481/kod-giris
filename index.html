@@ -1781,7 +1781,7 @@
                     catFilter: '',
                     search: '',
                     dateFilter: '',
-                    sortOrder: 'date-desc',
+                    sortOrder: 'city',
                     routeTrip: '',
                     typeFilter: '',
                     indFilter: '',
@@ -6979,9 +6979,10 @@ state.trips = state.trips.filter(t => String(t.id) !== tripIdToDelete);
                         state.form.addToRoute = true;
                     }
 
-                    if (isFuelSelected) {
+                                       if (isFuelSelected) {
                         if (!state.form.place) state.form.place = 'Akaryakıt İstasyonu';
                     } else {
+                        if (state.form.place === 'Akaryakıt İstasyonu') state.form.place = '';
                         state.form.startKm = '';
                         state.form.endKm = '';
                         state.form.fuelAmount = '';
